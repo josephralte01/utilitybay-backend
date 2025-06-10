@@ -1,4 +1,3 @@
-// backend-api/routes/blogs.js
 const express = require('express');
 const router = express.Router();
 
@@ -8,7 +7,7 @@ let blogs = [
     title: 'Welcome to UtilityBay!',
     content: 'This is your first blog post. You can manage blogs from the admin panel.',
     author: 'Admin',
-    created_at: new Date()
+    created_at: new Date().toISOString()  // 🛠 Use ISO format
   }
 ];
 
@@ -27,13 +26,15 @@ router.get('/:id', (req, res) => {
 // ✅ POST create new blog
 router.post('/', (req, res) => {
   const { title, content, author } = req.body;
+
   const newBlog = {
     id: blogs.length + 1,
     title,
     content,
     author,
-    created_at: new Date()
+    created_at: new Date().toISOString()  // 🛠 Consistent ISO string
   };
+
   blogs.push(newBlog);
   res.status(201).json({ message: 'Blog created', blog: newBlog });
 });
