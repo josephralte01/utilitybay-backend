@@ -5,7 +5,6 @@ const nodemailer = require('nodemailer');
 const orders = [];
 const notifications = [];
 
-// Email config
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -19,21 +18,18 @@ router.get('/', (req, res) => {
   res.json(orders);
 });
 
-// GET notifications
+// GET admin notifications
 router.get('/notifications', (req, res) => {
   res.json(notifications);
 });
 
-// ✅ NEW: Regional best-sellers
+// ✅ Regional Best-Sellers
 router.get('/top-regions', (req, res) => {
   const regionStats = {};
 
   orders.forEach(order => {
     const region = extractRegion(order.address || 'Unknown');
-
-    if (!regionStats[region]) {
-      regionStats[region] = { totalItems: 0, products: {} };
-    }
+    if (!regionStats[region]) regionStats[region] = { totalItems: 0, products: {} };
 
     order.items.forEach(item => {
       const key = item.name;
@@ -58,7 +54,7 @@ router.get('/top-regions', (req, res) => {
   res.json(formatted);
 });
 
-// ✅ NEW: Average Order Value (AOV)
+// ✅ Average Order Value
 router.get('/average-order-value', (req, res) => {
   if (orders.length === 0) {
     return res.json({ average_order_value: 0 });
@@ -70,6 +66,31 @@ router.get('/average-order-value', (req, res) => {
   res.json({
     average_order_value: parseFloat(average.toFixed(2)),
     total_orders: orders.length
+  });
+});
+
+// ✅ Profit Tracking
+router.get('/profit-summary', (req, res) => {
+  let revenue = 0;
+  let cost = 0;
+
+  orders.forEach(order => {
+    revenue += order.total_amount || 0;
+
+    order.items.forEach(item => {
+      const qty = item.quantity || 1;
+      const itemCost = (item.cost_price || 0) * qty;
+      cost += itemCost;
+    });
+  });
+
+  const profit = revenue - cost;
+
+  res.json({
+    total_revenue: revenue,
+    total_cost: cost,
+    total_profit: profit,
+    number_of_orders: orders.length
   });
 });
 
@@ -149,7 +170,7 @@ router.post('/', async (req, res) => {
   });
 });
 
-// 🧠 Region extractor from address
+// 🧠 Region extractor
 function extractRegion(address) {
   if (!address || typeof address !== 'string') return 'Unknown';
   const parts = address.split(',');
