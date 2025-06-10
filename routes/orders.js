@@ -58,6 +58,21 @@ router.get('/top-regions', (req, res) => {
   res.json(formatted);
 });
 
+// ✅ NEW: Average Order Value (AOV)
+router.get('/average-order-value', (req, res) => {
+  if (orders.length === 0) {
+    return res.json({ average_order_value: 0 });
+  }
+
+  const total = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+  const average = total / orders.length;
+
+  res.json({
+    average_order_value: parseFloat(average.toFixed(2)),
+    total_orders: orders.length
+  });
+});
+
 // ✅ Guest tracking
 router.get('/track/:token', (req, res) => {
   const { token } = req.params;
@@ -103,7 +118,7 @@ router.post('/', async (req, res) => {
     items: itemsWithCost,
     status: 'pending',
     created_at: new Date().toISOString(),
-    region: extractRegion(order.address || '') // Save extracted region
+    region: extractRegion(order.address || '')
   };
 
   orders.push(fullOrder);
