@@ -29,7 +29,10 @@ router.get('/top-regions', (req, res) => {
 
   orders.forEach(order => {
     const region = extractRegion(order.address || 'Unknown');
-    if (!regionStats[region]) regionStats[region] = { totalItems: 0, products: {} };
+
+    if (!regionStats[region]) {
+      regionStats[region] = { totalItems: 0, products: {} };
+    }
 
     order.items.forEach(item => {
       const key = item.name;
@@ -56,52 +59,62 @@ router.get('/top-regions', (req, res) => {
 
 // ✅ Average Order Value
 router.get('/average-order-value', (req, res) => {
-  if (orders.length === 0) {
-    return res.json({ average_order_value: 0 });
-  }
+  if (orders.length === 0) return res.json({ average_order_value: 0 });
 
   const total = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
-  const average = total / orders.length;
+  const avg = total / orders.length;
 
   res.json({
-    average_order_value: parseFloat(average.toFixed(2)),
+    average_order_value: parseFloat(avg.toFixed(2)),
     total_orders: orders.length
   });
 });
 
-// ✅ Profit Tracking
+// ✅ Profit Summary
 router.get('/profit-summary', (req, res) => {
-  let revenue = 0;
-  let cost = 0;
+  let totalRevenue = 0;
+  let totalCost = 0;
 
   orders.forEach(order => {
-    revenue += order.total_amount || 0;
-
     order.items.forEach(item => {
-      const qty = item.quantity || 1;
-      const itemCost = (item.cost_price || 0) * qty;
-      cost += itemCost;
+      const quantity = item.quantity || 1;
+      totalRevenue += item.price * quantity;
+      totalCost += (item.cost_price || 0) * quantity;
     });
   });
 
-  const profit = revenue - cost;
+  const profit = totalRevenue - totalCost;
 
   res.json({
-    total_revenue: revenue,
-    total_cost: cost,
-    total_profit: profit,
-    number_of_orders: orders.length
+    total_revenue: totalRevenue,
+    total_cost: totalCost,
+    total_profit: profit
   });
 });
 
-// ✅ Guest tracking
+// ✅ Total Sales Summary
+router.get('/sales-summary', (req, res) => {
+  const totalSales = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+  const totalOrders = orders.length;
+  const itemsSold = orders.reduce((sum, order) => {
+    return sum + order.items.reduce((itemSum, item) => itemSum + (item.quantity || 1), 0);
+  }, 0);
+
+  res.json({
+    total_sales: totalSales,
+    total_orders: totalOrders,
+    items_sold: itemsSold
+  });
+});
+
+// ✅ Guest Tracking
 router.get('/track/:token', (req, res) => {
   const { token } = req.params;
   const guestOrder = orders.find(o => o.guest_tracking_token === token);
 
   if (!guestOrder) return res.status(404).json({ error: 'Order not found' });
 
-  const publicDetails = {
+  res.json({
     order_id: guestOrder.order_id,
     name: guestOrder.name,
     status: guestOrder.status,
@@ -112,12 +125,10 @@ router.get('/track/:token', (req, res) => {
     })),
     total_amount: guestOrder.total_amount,
     placed_on: guestOrder.created_at || new Date().toISOString()
-  };
-
-  res.json(publicDetails);
+  });
 });
 
-// ✅ Place new order
+// ✅ Create new order
 router.post('/', async (req, res) => {
   const order = req.body;
   const orderId = 'ORD' + (orders.length + 1).toString().padStart(3, '0');
@@ -170,7 +181,7 @@ router.post('/', async (req, res) => {
   });
 });
 
-// 🧠 Region extractor
+// 🧠 Extract region
 function extractRegion(address) {
   if (!address || typeof address !== 'string') return 'Unknown';
   const parts = address.split(',');
