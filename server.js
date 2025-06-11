@@ -27,6 +27,7 @@ const orderRoutes = require('./routes/orders');
 const productRoutes = require('./routes/products');
 const couponRoutes = require('./routes/coupons');
 const blogRoutes = require('./routes/blogs');
+const blogCategoryRoutes = require('./routes/blogCategories'); // ✅ NEW
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
@@ -36,6 +37,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/blogs', blogRoutes);
+app.use('/api/blog-categories', blogCategoryRoutes); // ✅ NEW
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
@@ -46,13 +48,14 @@ app.get('/', (req, res) => {
 });
 
 // ✅ Logging mounts
-console.log('📦 Mounted /api/orders    →', typeof orderRoutes);
-console.log('📦 Mounted /api/products  →', typeof productRoutes);
-console.log('📦 Mounted /api/coupons   →', typeof couponRoutes);
-console.log('📝 Mounted /api/blogs     →', typeof blogRoutes);
-console.log('🔐 Mounted /api/auth      →', typeof authRoutes);
-console.log('🙋 Mounted /api/user      →', typeof userRoutes);
-console.log('🛡️  Mounted /api/admin     →', typeof adminRoutes);
+console.log('📦 Mounted /api/orders         →', typeof orderRoutes);
+console.log('📦 Mounted /api/products       →', typeof productRoutes);
+console.log('📦 Mounted /api/coupons        →', typeof couponRoutes);
+console.log('📝 Mounted /api/blogs          →', typeof blogRoutes);
+console.log('📚 Mounted /api/blog-categories →', typeof blogCategoryRoutes); // ✅ NEW
+console.log('🔐 Mounted /api/auth           →', typeof authRoutes);
+console.log('🙋 Mounted /api/user           →', typeof userRoutes);
+console.log('🛡️  Mounted /api/admin          →', typeof adminRoutes);
 
 // ✅ Start the server
 app.listen(port, () => {

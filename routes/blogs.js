@@ -1,59 +1,65 @@
 const express = require('express');
 const router = express.Router();
+const Blog = require('../models/Blog');
 
-let blogs = [
-  {
-    id: 1,
-    title: 'Welcome to UtilityBay!',
-    content: 'This is your first blog post. You can manage blogs from the admin panel.',
-    author: 'Admin',
-    created_at: new Date().toISOString()  // 🛠 Use ISO format
+// ✅ Get all blogs
+router.get('/', async (req, res) => {
+  try {
+    const blogs = await Blog.find().sort({ createdAt: -1 });
+    res.json(blogs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch blogs' });
   }
-];
-
-// ✅ GET all blogs
-router.get('/', (req, res) => {
-  res.json(blogs);
 });
 
-// ✅ GET a single blog by ID
-router.get('/:id', (req, res) => {
-  const blog = blogs.find(b => b.id === parseInt(req.params.id));
-  if (!blog) return res.status(404).json({ error: 'Blog not found' });
-  res.json(blog);
+// ✅ Get single blog by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) return res.status(404).json({ error: 'Blog not found' });
+    res.json(blog);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching blog' });
+  }
 });
 
-// ✅ POST create new blog
-router.post('/', (req, res) => {
-  const { title, content, author } = req.body;
+// ✅ Create new blog
+router.post('/', async (req, res) => {
+  const { title, content, author, category, tags } = req.body;
 
-  const newBlog = {
-    id: blogs.length + 1,
-    title,
-    content,
-    author,
-    created_at: new Date().toISOString()  // 🛠 Consistent ISO string
-  };
-
-  blogs.push(newBlog);
-  res.status(201).json({ message: 'Blog created', blog: newBlog });
+  try {
+    const blog = new Blog({ title, content, author, category, tags });
+    await blog.save();
+    res.status(201).json({ message: 'Blog created', blog });
+  } catch (err) {
+    res.status(400).json({ error: 'Failed to create blog', details: err });
+  }
 });
 
-// ✅ PUT update blog by ID
-router.put('/:id', (req, res) => {
-  const blog = blogs.find(b => b.id === parseInt(req.params.id));
-  if (!blog) return res.status(404).json({ error: 'Blog not found' });
-
-  blog.title = req.body.title || blog.title;
-  blog.content = req.body.content || blog.content;
-  blog.author = req.body.author || blog.author;
-  res.json({ message: 'Blog updated', blog });
+// ✅ Update blog
+router.put('/:id', async (req, res) => {
+  try {
+    const updated = await Blog.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ error: 'Blog not found' });
+    res.json({ message: 'Blog updated', blog: updated });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update blog' });
+  }
 });
 
-// ✅ DELETE a blog
-router.delete('/:id', (req, res) => {
-  blogs = blogs.filter(b => b.id !== parseInt(req.params.id));
-  res.json({ message: 'Blog deleted' });
+// ✅ Delete blog
+router.delete('/:id', async (req, res) => {
+  try {
+    const deleted = await Blog.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Blog not found' });
+    res.json({ message: 'Blog deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete blog' });
+  }
 });
 
 module.exports = router;
