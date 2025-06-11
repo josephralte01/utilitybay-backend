@@ -2,10 +2,16 @@ const express = require('express');
 const router = express.Router();
 const Blog = require('../models/Blog');
 
-// ✅ Get all blogs
+// ✅ Get all blogs (optionally filtered by category)
 router.get('/', async (req, res) => {
   try {
-    const blogs = await Blog.find().sort({ createdAt: -1 });
+    const filter = {};
+
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
+
+    const blogs = await Blog.find(filter).sort({ createdAt: -1 });
     res.json(blogs);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch blogs' });
