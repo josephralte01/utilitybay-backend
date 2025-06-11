@@ -1,3 +1,11 @@
+const express = require('express');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+
+const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET;
+
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   console.log(`🛂 Login attempt: ${email}`);
@@ -19,8 +27,11 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ userId: user._id, isAdmin: true }, JWT_SECRET);
     console.log('✅ Admin login success');
     res.json({ token, user: { email: user.email, name: user.name } });
+
   } catch (err) {
     console.error('🔥 Server error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+module.exports = router;
