@@ -6,6 +6,10 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
+// ✅ Middleware: parse both JSON and URL-encoded form data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // ✅ CORS: Allow only Vercel admin panel domain
 app.use(cors({
   origin: ['https://utilitybay-admin-panel.vercel.app'],
@@ -13,16 +17,10 @@ app.use(cors({
   credentials: true
 }));
 
-// ✅ Middleware to parse incoming JSON requests (IMPORTANT: must be before routes)
-app.use(express.json());
-
 // ✅ Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('✅ Connected to MongoDB Atlas'))
-.catch(err => console.error('❌ MongoDB connection error:', err));
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ Connected to MongoDB Atlas'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // ✅ Import Routes
 const orderRoutes = require('./routes/orders');
