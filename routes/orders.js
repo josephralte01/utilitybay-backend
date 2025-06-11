@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
+const Product = require('../models/Product'); // ✅ Mongoose model
 
 const orders = [];
 const notifications = [];
@@ -128,60 +129,79 @@ router.get('/track/:token', (req, res) => {
   });
 });
 
-// ✅ Create new order
+// ✅ Create new order with stock decrement
 router.post('/', async (req, res) => {
   const order = req.body;
   const orderId = 'ORD' + (orders.length + 1).toString().padStart(3, '0');
-
-  const costPriceMap = {
-    1: 180,
-    2: 1020,
-    3: 480
-  };
-
-  const itemsWithCost = order.items.map(item => ({
-    ...item,
-    cost_price: costPriceMap[item.id] || 0
-  }));
-
-  const fullOrder = {
-    order_id: orderId,
-    ...order,
-    items: itemsWithCost,
-    status: 'pending',
-    created_at: new Date().toISOString(),
-    region: extractRegion(order.address || '')
-  };
-
-  orders.push(fullOrder);
-
-  notifications.push({
-    message: `New Order: ${orderId}`,
-    unread: true,
-    timestamp: new Date(),
-    amount: order.total_amount,
-    customer: order.name
-  });
+  const itemsWithCost = [];
 
   try {
-    await transporter.sendMail({
-      from: `"UtilityBay" <${process.env.UTILITYBAY_EMAIL}>`,
-      to: order.email || 'backup@example.com',
-      subject: `Thanks for your order! ${orderId}`,
-      text: `Hi ${order.name},\n\nYour order of ₹${order.total_amount} was successfully placed. We'll notify you when it's shipped.\n\nThank you!\nUtilityBay Team`
-    });
-  } catch (err) {
-    console.error(`❌ Email failed for ${orderId}:`, err);
-  }
+    // Step 1: Stock validation and decrement
+    for (const item of order.items) {
+      const product = await Product.findById(item.id);
 
-  res.status(201).json({
-    message: '✅ Order placed',
-    order_id: orderId,
-    tracking_token: order.guest_tracking_token
-  });
+      if (!product) {
+        return res.status(400).json({ error: `Product not found: ${item.name}` });
+      }
+
+      if (product.stockQty < item.quantity) {
+        return res.status(400).json({ error: `Insufficient stock for ${product.name}` });
+      }
+
+      product.stockQty -= item.quantity;
+      await product.save();
+
+      itemsWithCost.push({
+        ...item,
+        cost_price: product.cost_price
+      });
+    }
+
+    // Step 2: Compose and save order
+    const fullOrder = {
+      order_id: orderId,
+      ...order,
+      items: itemsWithCost,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      region: extractRegion(order.address || '')
+    };
+
+    orders.push(fullOrder);
+
+    notifications.push({
+      message: `New Order: ${orderId}`,
+      unread: true,
+      timestamp: new Date(),
+      amount: order.total_amount,
+      customer: order.name
+    });
+
+    // Step 3: Email notification
+    try {
+      await transporter.sendMail({
+        from: `"UtilityBay" <${process.env.UTILITYBAY_EMAIL}>`,
+        to: order.email || 'backup@example.com',
+        subject: `Thanks for your order! ${orderId}`,
+        text: `Hi ${order.name},\n\nYour order of ₹${order.total_amount} was successfully placed. We'll notify you when it's shipped.\n\nThank you!\nUtilityBay Team`
+      });
+    } catch (err) {
+      console.error(`❌ Email failed for ${orderId}:`, err);
+    }
+
+    res.status(201).json({
+      message: '✅ Order placed',
+      order_id: orderId,
+      tracking_token: order.guest_tracking_token
+    });
+
+  } catch (err) {
+    console.error('❌ Order placement failed:', err);
+    res.status(500).json({ error: 'Failed to place order' });
+  }
 });
 
-// 🧠 Extract region
+// 🧠 Extract region helper
 function extractRegion(address) {
   if (!address || typeof address !== 'string') return 'Unknown';
   const parts = address.split(',');
