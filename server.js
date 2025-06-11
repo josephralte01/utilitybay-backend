@@ -1,17 +1,23 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-require('dotenv').config(); // Load .env variables
+require('dotenv').config();
 
 const app = express();
 const port = 5000;
 
-// ✅ Connect to MongoDB Atlas (clean version)
+// ✅ Connect to MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-app.use(cors());
+// ✅ CORS: Allow only Vercel domain
+app.use(cors({
+  origin: ['https://utilitybay-admin-panel.vercel.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Route imports
