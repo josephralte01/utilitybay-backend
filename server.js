@@ -6,15 +6,15 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// ✅ Middleware to parse incoming JSON requests
-app.use(express.json());
-
 // ✅ CORS: Allow only Vercel admin panel domain
 app.use(cors({
   origin: ['https://utilitybay-admin-panel.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
+
+// ✅ Middleware to parse incoming JSON requests (IMPORTANT: must be before routes)
+app.use(express.json());
 
 // ✅ Connect to MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI, {
