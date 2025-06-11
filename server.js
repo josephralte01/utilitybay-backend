@@ -4,23 +4,27 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
-// ✅ Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ Connected to MongoDB Atlas'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+// ✅ Middleware to parse incoming JSON requests
+app.use(express.json());
 
-// ✅ CORS: Allow only Vercel domain
+// ✅ CORS: Allow only Vercel admin panel domain
 app.use(cors({
   origin: ['https://utilitybay-admin-panel.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
 
-app.use(express.json());
+// ✅ Connect to MongoDB Atlas
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('✅ Connected to MongoDB Atlas'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
 
-// Route imports
+// ✅ Import Routes
 const orderRoutes = require('./routes/orders');
 const productRoutes = require('./routes/products');
 const couponRoutes = require('./routes/coupons');
@@ -29,7 +33,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 
-// Register routes
+// ✅ Register Routes
 app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/coupons', couponRoutes);
@@ -38,12 +42,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Health check
+// ✅ Health check route
 app.get('/', (req, res) => {
-  res.send('✅ Backend API is working');
+  res.send('✅ UtilityBay Backend API is running');
 });
 
-// Logging
+// ✅ Logging mounts
 console.log('📦 Mounted /api/orders    →', typeof orderRoutes);
 console.log('📦 Mounted /api/products  →', typeof productRoutes);
 console.log('📦 Mounted /api/coupons   →', typeof couponRoutes);
@@ -52,7 +56,7 @@ console.log('🔐 Mounted /api/auth      →', typeof authRoutes);
 console.log('🙋 Mounted /api/user      →', typeof userRoutes);
 console.log('🛡️  Mounted /api/admin     →', typeof adminRoutes);
 
-// Start server
+// ✅ Start the server
 app.listen(port, () => {
-  console.log(`🚀 Backend running on http://localhost:${port}`);
+  console.log(`🚀 UtilityBay backend running on http://localhost:${port}`);
 });
