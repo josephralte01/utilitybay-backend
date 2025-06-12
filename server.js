@@ -6,13 +6,13 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// ✅ Middleware: parse both JSON and URL-encoded form data
+// ✅ Middleware: JSON + URL-encoded parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ CORS: Allow only Vercel admin panel domain
+// ✅ CORS: Admin panel domain (Vercel frontend)
 app.use(cors({
-  origin: ['https://utilitybay-admin-panel.vercel.app'],
+  origin: ['https://utilitybay-admin-panel.vercel.app'], // You can add staging/local here if needed
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
@@ -27,7 +27,7 @@ const orderRoutes = require('./routes/orders');
 const productRoutes = require('./routes/products');
 const couponRoutes = require('./routes/coupons');
 const blogRoutes = require('./routes/blogs');
-const blogCategoryRoutes = require('./routes/blogCategories'); // ✅ NEW
+const blogCategoryRoutes = require('./routes/blogCategories');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
@@ -37,27 +37,28 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/blogs', blogRoutes);
-app.use('/api/blog-categories', blogCategoryRoutes); // ✅ NEW
+app.use('/api/blog-categories', blogCategoryRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 
-// ✅ Health check route
+// ✅ Health check
 app.get('/', (req, res) => {
   res.send('✅ UtilityBay Backend API is running');
 });
 
-// ✅ Logging mounts
-console.log('📦 Mounted /api/orders         →', typeof orderRoutes);
-console.log('📦 Mounted /api/products       →', typeof productRoutes);
-console.log('📦 Mounted /api/coupons        →', typeof couponRoutes);
-console.log('📝 Mounted /api/blogs          →', typeof blogRoutes);
-console.log('📚 Mounted /api/blog-categories →', typeof blogCategoryRoutes); // ✅ NEW
-console.log('🔐 Mounted /api/auth           →', typeof authRoutes);
-console.log('🙋 Mounted /api/user           →', typeof userRoutes);
-console.log('🛡️  Mounted /api/admin          →', typeof adminRoutes);
+// ✅ Console: Route mount confirmations
+console.log('\n📦 API Routes Mounted:');
+console.log('  /api/orders          →', typeof orderRoutes);
+console.log('  /api/products        →', typeof productRoutes);
+console.log('  /api/coupons         →', typeof couponRoutes);
+console.log('  /api/blogs           →', typeof blogRoutes);
+console.log('  /api/blog-categories →', typeof blogCategoryRoutes);
+console.log('  /api/auth            →', typeof authRoutes);
+console.log('  /api/user            →', typeof userRoutes);
+console.log('  /api/admin           →', typeof adminRoutes);
 
-// ✅ Start the server
+// ✅ Start server
 app.listen(port, () => {
-  console.log(`🚀 UtilityBay backend running on http://localhost:${port}`);
+  console.log(`\n🚀 UtilityBay backend running at http://localhost:${port}`);
 });
