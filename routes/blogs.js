@@ -1,16 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const Blog = require('../models/Blog');
+const verifyAdminToken = require('../middleware/verifyAdminToken');
 
 // ✅ Get all blogs (optionally filtered by category)
 router.get('/', async (req, res) => {
   try {
     const filter = {};
-
     if (req.query.category) {
       filter.category = req.query.category;
     }
-
     const blogs = await Blog.find(filter).sort({ createdAt: -1 });
     res.json(blogs);
   } catch (err) {
@@ -29,8 +28,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ✅ Create new blog
-router.post('/', async (req, res) => {
+// ✅ Create new blog (admin only)
+router.post('/', verifyAdminToken, async (req, res) => {
   const { title, content, author, category, tags } = req.body;
 
   try {
@@ -42,14 +41,10 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ Update blog
-router.put('/:id', async (req, res) => {
+// ✅ Update blog (admin only)
+router.put('/:id', verifyAdminToken, async (req, res) => {
   try {
-    const updated = await Blog.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const updated = await Blog.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updated) return res.status(404).json({ error: 'Blog not found' });
     res.json({ message: 'Blog updated', blog: updated });
   } catch (err) {
@@ -57,8 +52,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// ✅ Delete blog
-router.delete('/:id', async (req, res) => {
+// ✅ Delete blog (admin only)
+router.delete('/:id', verifyAdminToken, async (req, res) => {
   try {
     const deleted = await Blog.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: 'Blog not found' });
