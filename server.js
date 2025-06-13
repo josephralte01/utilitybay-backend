@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
-
+const analyticsRoutes = require('./routes/analytics');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -41,6 +41,7 @@ app.use('/api/blog-categories', blogCategoryRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // ✅ Health check
 app.get('/', (req, res) => {
@@ -57,6 +58,7 @@ console.log('  /api/blog-categories →', typeof blogCategoryRoutes);
 console.log('  /api/auth            →', typeof authRoutes);
 console.log('  /api/user            →', typeof userRoutes);
 console.log('  /api/admin           →', typeof adminRoutes);
+console.log('  /api/analytics       →', typeof analyticsRoutes);
 
 // ✅ Start server
 app.listen(port, () => {
